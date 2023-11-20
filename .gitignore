@@ -1,0 +1,8 @@
+/.idea/
+*.keytab
+/conf/cluster/kb-a/*
+/conf/cluster/kb-b/*
+/conf/cluster/kb-c/*
+/conf/cluster/zk-a/*
+/conf/cluster/zk-b/*
+/conf/cluster/zk-c/*
