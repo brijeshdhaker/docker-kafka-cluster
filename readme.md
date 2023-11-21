@@ -1,42 +1,42 @@
 
-docker compose -f docker-compose.yml exec -it kafkabroker bash
+docker compose -f docker-compose.yml exec -it kafkabroker-a bash
 
 # Topic - Creation
 
-docker compose -f docker-compose.yml exec -T kafkabroker echo $HOSTNAME
+docker compose -f docker-compose.yml exec -T kafkabroker-a echo $HOSTNAME
 
-docker compose exec kafkabroker sh -c "kafka-topics --create --bootstrap-server kafkabroker.sandbox.net:19091 --partitions 1 --replication-factor 1 --topic kafka-python-simple-topic --if-not-exists"
+docker compose exec kafkabroker-a sh -c "kafka-topics --create --bootstrap-server kafkabroker-a.sandbox.net:19091 --partitions 1 --replication-factor 1 --topic kafka-python-simple-topic --if-not-exists"
 
-docker compose exec kafkabroker sh -c "kafka-topics --create --bootstrap-server kafkabroker.sandbox.net:19091 --partitions 4 --replication-factor 1 --topic kafka-python-partitioned-topic"
+docker compose exec kafkabroker-a sh -c "kafka-topics --create --bootstrap-server kafkabroker-a.sandbox.net:19091 --partitions 5 --replication-factor 1 --topic kafka-python-partitioned-topic"
 
 # Topic - List
-docker compose exec kafkabroker sh -c "kafka-topics --list --bootstrap-server kafkabroker.sandbox.net:19091"
+docker compose exec kafkabroker-a sh -c "kafka-topics --list --bootstrap-server kafkabroker-a.sandbox.net:19091"
 
 # Topic - Describe
-docker compose exec kafkabroker sh -c "kafka-topics --describe --topic kafka-python-simple-topic --bootstrap-server kafkabroker.sandbox.net:19091"
+docker compose exec kafkabroker-a sh -c "kafka-topics --describe --topic kafka-python-simple-topic --bootstrap-server kafkabroker-a.sandbox.net:19091"
 
 # Topic - Alter
-docker compose exec kafkabroker sh -c "kafka-topics --alter --topic kafka-python-partitioned-topic --partitions 5 --bootstrap-server kafkabroker.sandbox.net:19091"
+docker compose exec kafkabroker-a sh -c "kafka-topics --alter --topic kafka-python-partitioned-topic --partitions 5 --bootstrap-server kafkabroker-a.sandbox.net:19091"
 
 # Topic - Delete
-docker compose exec kafkabroker sh -c "kafka-topics --delete --topic kafka-python-simple-topic --bootstrap-server kafkabroker.sandbox.net:19091"
+docker compose exec kafkabroker-a sh -c "kafka-topics --delete --topic kafka-python-simple-topic --bootstrap-server kafkabroker-a.sandbox.net:19091"
 
 # Topic - Check current Retention period
-docker compose exec kafkabroker sh -c "kafka-configs –zookeeper zookeeper.sandbox.net:2181 –describe –entity-type topics –entity-name <topic name>"
+docker compose exec kafkabroker-a sh -c "kafka-configs –zookeeper zookeeper.sandbox.net:2181 –describe –entity-type topics –entity-name <topic name>"
 
 
 # Kafka - Broker Console
-docker-compose -f docker-compose.yml exec kafkabroker bash
+docker-compose -f docker-compose.yml exec kafkabroker-a bash
 
 ### Producer :
-docker-compose -f docker-compose.yml exec kafkabroker bash
+docker-compose -f docker-compose.yml exec kafkabroker-a bash
 
-kafka-console-producer --topic kafka-python-simple-topic --broker-list kafkabroker.sandbox.net:19091
+kafka-console-producer --topic kafka-python-simple-topic --broker-list kafkabroker-a.sandbox.net:19091
 
 #### With Key
 kafka-console-producer \
 --topic kafka-python-simple-topic
---broker-list kafkabroker.sandbox.net:19091 \
+--broker-list kafkabroker-a.sandbox.net:19091 \
 --property parse.key=true \
 --property key.separator=":" \
 
@@ -45,13 +45,13 @@ kafka-console-producer \
 kafka-console-consumer \
 --topic kafka-python-simple-topic \
 --group test-cg \
---bootstrap-server kafkabroker.sandbox.net:19091
+--bootstrap-server kafkabroker-a.sandbox.net:19091
 
 #### With Key
 kafka-console-consumer \
 --topic kafka-python-simple-topic \
 --group test-cg \
---bootstrap-server kafkabroker.sandbox.net:19091 \
+--bootstrap-server kafkabroker-a.sandbox.net:19091 \
 --from-beginning \
 --property print.key=true \
 --property key.separator="-"
@@ -63,7 +63,7 @@ docker system prune -a --volumes --filter "label=io.confluent.docker"
 docker-compose up -d
 docker-compose exec broker kafka-topics --create \
 --topic users-topic-avro \
---bootstrap-server kafkabroker.sandbox.net:19091 \
+--bootstrap-server kafkabroker-a.sandbox.net:19091 \
 --partitions 1 \
 --replication-factor 1
 --if-not-exists
@@ -75,7 +75,7 @@ docker-compose exec broker kafka-topics --create \
 docker-compose exec schemaregistry bash
 
 kafka-avro-console-producer --topic users-topic-avro \
---bootstrap-server kafkabroker.sandbox.net:19091 \
+--bootstrap-server kafkabroker-a.sandbox.net:19091 \
 --property value.schema="$(< /opt/app/schema/user.avsc)"
 
 # Register a new version of a schema under the subject "Kafka-key"
@@ -133,10 +133,10 @@ $ curl -X PUT -i -H "Content-Type: application/vnd.schemaregistry.v1+json" \
 http://localhost:8081/config
 
 kafka-avro-console-consumer --topic users \
---bootstrap-server kafkabroker.sandbox.net:19091
+--bootstrap-server kafkabroker-a.sandbox.net:19091
 
 kafka-avro-console-consumer --topic users \
---bootstrap-server kafkabroker.sandbox.net:19091 \
+--bootstrap-server kafkabroker-a.sandbox.net:19091 \
 --property schema.registry.url=http://schema-registry:8081 \
 --from-beginning
 
@@ -185,29 +185,29 @@ kafka-topics --zookeeper zookeeper:2181 --alter --topic users-topic-avro --confi
 ### Setup Default  7 days (168 hours , retention.ms= 604800000)
 
 ### Get Detail Info about Your Consumer Group –
-docker-compose -f docker-compose.yml exec -T kafkabroker kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --list
-docker-compose -f docker-compose.yml exec -T kafkabroker kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --describe --group test-avro-cg
+docker-compose -f docker-compose.yml exec -T kafkabroker-a kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --list
+docker-compose -f docker-compose.yml exec -T kafkabroker-a kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --describe --group test-avro-cg
 
 kafka-consumer-groups --describe --bootstrap-server localhost:9092 --group test-taxi-rides-cg
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --list
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --list
 
 #### Delete Offset
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --delete --group group_name
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --delete --group group_name
 
 #### Reset Offset
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --reset-offsets --to-earliest --all-topics --execute --group test-taxi-rides-cg
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --reset-offsets --to-earliest --all-topics --execute --group test-taxi-rides-cg
 
 ##### --shift-by :- Reset the offset by incrementing the current offset position by take both +ve or -ve number
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --shift-by 10 --topic sales_topic --execute
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --shift-by 10 --topic sales_topic --execute
 
 ##### --to-datetime :- Reset offsets to offset from datetime. Format: ‘YYYY-MM-DDTHH:mm:SS.sss’
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-datetime 2020-11-01T00:00:00Z --topic sales_topic --execute
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-datetime 2020-11-01T00:00:00Z --topic sales_topic --execute
 
 ##### --to-earliest :- Reset offsets to earliest (oldest) offset available in the topic.
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-earliest --topic sales_topic --execute
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-earliest --topic sales_topic --execute
 
 ##### --to-latest :- Reset offsets to latest (recent) offset available in the topic.
-kafka-consumer-groups --bootstrap-server kafkabroker.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-latest --topic taxi-rides --execute
+kafka-consumer-groups --bootstrap-server kafkabroker-a.sandbox.net:19091 --group test-taxi-rides-cg --reset-offsets --to-latest --topic taxi-rides --execute
 
 ### Get Detail Info about Your Consumer Group –
 
@@ -227,14 +227,14 @@ kafka-configs --zookeeper localhost:2181 --alter --entity-type topics --entity-n
 docker run --rm \
 --network sandbox.net \
 confluentinc/cp-kcat \
-kcat -b kafkabroker.sandbox.net:19092 -L -J | jq .
+kcat -b kafkabroker-a.sandbox.net:19092 -L -J | jq .
 
 Or 
 
 docker run -it \
 --network sandbox.net \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:19092 -L -J | jq .
+kafkacat -b kafkabroker-a.sandbox.net:19092 -L -J | jq .
 
 
 docker run --tty --rm \
@@ -243,7 +243,7 @@ docker run --tty --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:9093 -d all -L \
+kafkacat -b kafkabroker-a.sandbox.net:9093 -d all -L \
 -X 'security.protocol=SASL_PLAINTEXT' \
 -X 'sasl.mechanisms=GSSAPI' \
 -X 'sasl.kerberos.service.name=kafka' \
@@ -260,7 +260,7 @@ docker run -it --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:9093 \
+kafkacat -b kafkabroker-a.sandbox.net:9093 \
 -X 'security.protocol=SASL_PLAINTEXT' \
 -X 'sasl.mechanisms=GSSAPI' \
 -X 'sasl.kerberos.service.name=kafka' \
@@ -278,7 +278,7 @@ docker run -it --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:19092 -C \
+kafkacat -b kafkabroker-a.sandbox.net:19092 -C \
 -X 'security.protocol=SASL_PLAINTEXT' \
 -X 'sasl.mechanisms=GSSAPI' \
 -X 'sasl.kerberos.service.name=kafka' \
@@ -298,7 +298,7 @@ docker run -it --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:19093 -L -J \
+kafkacat -b kafkabroker-a.sandbox.net:19093 -L -J \
 -X 'security.protocol=SASL_SSL' \
 -X 'sasl.mechanisms=GSSAPI' \
 -X 'sasl.kerberos.service.name=kafka' \
@@ -319,7 +319,7 @@ docker run -it --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:19093 -P -t test_topic \
+kafkacat -b kafkabroker-a.sandbox.net:19093 -P -t test_topic \
 -X 'security.protocol=SASL_SSL' \
 -X 'sasl.mechanisms=GSSAPI' \
 -X 'sasl.kerberos.service.name=kafka' \
@@ -353,7 +353,7 @@ docker run -it --rm \
 --volume ./conf/kerberos:/etc/kerberos \
 --env KRB5_CONFIG=/etc/kerberos/krb5.conf \
 brijeshdhaker/kafka-clients:7.5.0 \
-kafkacat -b kafkabroker.sandbox.net:19093 -C -t test_topic -o beginning \
+kafkacat -b kafkabroker-a.sandbox.net:19093 -C -t test_topic -o beginning \
 -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\nTimestamp: %T\tPartition: %p\tOffset: %o\n--\n' -e \
 -X 'security.protocol=SASL_SSL' \
 -X 'sasl.mechanisms=GSSAPI' \
@@ -388,14 +388,14 @@ docker run --rm \
 --env KAFKA_OPTS="-Djava.security.auth.login.config=/etc/kafka/secrets/jaas/kafkaclients_jaas.conf -Djava.security.krb5.conf=/etc/kerberos/krb5.conf -Dsun.security.krb5.debug=false" \
 confluentinc/cp-server:7.5.0 \
 sh -c "kafka-console-producer --topic kcat-test-topic \
---broker-list kafkabroker.sandbox.net:19093 \
+--broker-list kafkabroker-a.sandbox.net:19093 \
 --producer.config /etc/kafka/secrets/cnf/client-ssl.properties \
 --property parse.key=true \
 --property key.separator=, < /etc/kafka/secrets/data/kcat_messages.txt"
 
 
-docker compose exec kafkabroker sh -c "kafka-console-producer --topic kcat-test-topic \
---broker-list kafkabroker.sandbox.net:19093 \
+docker compose exec kafkabroker-a sh -c "kafka-console-producer --topic kcat-test-topic \
+--broker-list kafkabroker-a.sandbox.net:19093 \
 --producer.config /etc/kafka/secrets/cnf/client-ssl.properties \
 --property parse.key=true \
 --property key.separator=, < /etc/kafka/secrets/kcat_messages.txt 2>/dev/null"
@@ -405,9 +405,9 @@ docker compose exec kafkabroker sh -c "kafka-console-producer --topic kcat-test-
 ```shell
 echo -e "\n# Consume messages from $topic_name"
 
-docker compose exec kafkabroker sh -c "kafka-console-consumer \
+docker compose exec kafkabroker-a sh -c "kafka-console-consumer \
 --topic kcat-test-topic \
---bootstrap-server kafkabroker.sandbox.net:19093 \
+--bootstrap-server kafkabroker-a.sandbox.net:19093 \
 --consumer.config /etc/kafka/secrets/cnf/client-ssl.properties \
 --from-beginning \
 --property print.key=true \
@@ -419,3 +419,14 @@ docker run --rm \
 confluentinc/cp-server:7.5.0 sh -c "/bin/kafka-storage random-uuid"
 
 zookeeper-shell zookeeper:2181 ls /
+
+
+docker compose exec kafkaclient python3 --version "kafkacat -F /etc/kafka/secrets/cnf/librdkafka_ssl.config -C -t test_topic -o -10 -e"
+
+
+#
+#
+#
+docker compose exec -it kafkaclient python3 /apps/kafka-python-clients/com/kafka/confluent/confluent_kafka_sasl_ssl_producer.py
+
+docker compose exec -it kafkaclient python3 /apps/kafka-python-clients/com/kafka/confluent/confluent_kafka_sasl_ssl_consumer.py

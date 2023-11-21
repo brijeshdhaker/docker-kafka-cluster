@@ -25,8 +25,7 @@ def basic_consume_loop(consumer, topics):
             if msg.error():
                 if msg.error().code() == KafkaError._PARTITION_EOF:
                     # End of partition event
-                    sys.stderr.write('%% %s [%d] reached end at offset %d\n' %
-                                     (msg.topic(), msg.partition(), msg.offset()))
+                    sys.stderr.write(msg.topic())
                 elif msg.error():
                     raise KafkaException(msg.error())
             else:
@@ -118,23 +117,14 @@ def asynchronous_commits_consume_loop(consumer, topics):
 #
 #
 #
-TOPIC = "kafka-python-partitioned-topic"
+TOPIC = "test-topic"
 
 #
 #     'enable.auto.commit': False,
 #
 consumer = Consumer({
-    'bootstrap.servers': 'kafkabroker-a.sandbox.net:19093,kafkabroker-b.sandbox.net:19093,kafkabroker-c.sandbox.net:19093',
-    'sasl.mechanism': 'GSSAPI',
-    'security.protocol': 'SASL_SSL',
-    'sasl.kerberos.service.name': 'kafka',
-    'sasl.kerberos.keytab': '/etc/kerberos/keytabs/kafkaclient.keytab',
-    'sasl.kerberos.principal': 'kafkaclient@SANDBOX.NET',
-    'ssl.key.location': '/etc/kafka/secrets/clients.key',
-    'ssl.key.password': 'confluent',
-    'ssl.certificate.location': '/etc/kafka/secrets/clients-signed.crt',
-    'ssl.ca.location': '/etc/kafka/secrets/sandbox-ca.pem',
-    'group.id': 'confluent_kafka_sasl_ssl_cg',
+    'bootstrap.servers': 'kafkabroker:19091',
+    'group.id': 'confluent_kafka_simple_consumer-cg',
     'on_commit': commit_completed
 })
 

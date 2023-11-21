@@ -1,0 +1,19 @@
+name: pykafka3.7
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - conda-pack
+  - nb_conda
+  - kafka-python
+  - fastavro=1.4.9
+  - jsonschema
+  - requests
+  - faker
+  - mysql-connector-python
+  - pip
+  - pip:
+      - gssapi
+      - confluent-kafka[avro]==2.3.0
+      - avro==1.11.0

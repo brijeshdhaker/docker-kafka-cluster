@@ -27,20 +27,11 @@ import random
 #
 #
 #
-TOPIC = "kafka-python-partitioned-topic"
+TOPIC = "test-topic"
 
 # Create Producer instance
 producer = Producer({
-    'bootstrap.servers': 'kafkabroker-a.sandbox.net:19093,kafkabroker-b.sandbox.net:19093,kafkabroker-c.sandbox.net:19093',
-    'sasl.mechanism': 'GSSAPI',
-    'security.protocol': 'SASL_SSL',
-    'sasl.kerberos.service.name': 'kafka',
-    'sasl.kerberos.keytab': '/etc/kerberos/keytabs/kafkaclient.keytab',
-    'sasl.kerberos.principal': 'kafkaclient@SANDBOX.NET',
-    'ssl.key.location': '/etc/kafka/secrets/clients.key',
-    'ssl.key.password': 'confluent',
-    'ssl.certificate.location': '/etc/kafka/secrets/clients-signed.crt',
-    'ssl.ca.location': '/etc/kafka/secrets/sandbox-ca.pem'
+    'bootstrap.servers': 'kafkabroker:19091'
 })
 
 #
@@ -74,7 +65,7 @@ if __name__ == '__main__':
         #
         produced_records += 1
         #
-        KEYS = ["A", "B", "C", "D", "E"]
+        KEYS = ["A", "B", "C", "D"]
         record_key = random.choice(KEYS)
         # record_value = json.dumps({'key': record_key, 'index': produced_records})
         record_value = "This is test event {} of type {}".format(produced_records, record_key)

@@ -35,6 +35,8 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper-a.sandbox.net
     container_name: zookeeper-a
+    depends_on:
+      - kerberos
     healthcheck:
       test: nc zookeeper-a.sandbox.net 2181 || exit 1
       retries: 20
@@ -86,6 +88,8 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper-b.sandbox.net
     container_name: zookeeper-b
+    depends_on:
+      - kerberos
     healthcheck:
       test: nc zookeeper-b.sandbox.net 2181 || exit 1
       retries: 20
@@ -136,6 +140,8 @@ services:
     image: confluentinc/cp-zookeeper:7.5.0
     hostname: zookeeper-c.sandbox.net
     container_name: zookeeper-c
+    depends_on:
+      - kerberos
     healthcheck:
       test: nc zookeeper-c.sandbox.net 2181 || exit 1
       retries: 20
@@ -189,6 +195,10 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     hostname: kafkabroker-a.sandbox.net
     container_name: kafkabroker-a
+    depends_on:
+      - zookeeper-a
+      - zookeeper-b
+      - zookeeper-c
     volumes:
       - sandbox_apps_path:/apps
       - ./conf/cluster/kb-a/data:/var/lib/kafka/data
@@ -267,6 +277,10 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     hostname: kafkabroker-b.sandbox.net
     container_name: kafkabroker-b
+    depends_on:
+      - zookeeper-a
+      - zookeeper-b
+      - zookeeper-c
     volumes:
       - sandbox_apps_path:/apps
       - ./conf/cluster/kb-b/data:/var/lib/kafka/data
@@ -334,6 +348,10 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     hostname: kafkabroker-c.sandbox.net
     container_name: kafkabroker-c
+    depends_on:
+      - zookeeper-a
+      - zookeeper-b
+      - zookeeper-c
     volumes:
       - sandbox_apps_path:/apps
       - ./conf/cluster/kb-c/data:/var/lib/kafka/data
@@ -466,6 +484,7 @@ services:
     volumes:
       - sandbox_apps_path:/apps
       - ./conf/kafka/secrets:/etc/kafka/secrets
+      - ./src/main/py:/apps/kafka-python-clients
       - ./conf/kerberos:/etc/kerberos
     environment:
       KRB5_CONFIG: "/etc/kerberos/krb5.conf"
