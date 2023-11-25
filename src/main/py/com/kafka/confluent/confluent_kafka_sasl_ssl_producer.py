@@ -77,7 +77,7 @@ if __name__ == '__main__':
         KEYS = ["A", "B", "C", "D", "E"]
         record_key = random.choice(KEYS)
         # record_value = json.dumps({'key': record_key, 'index': produced_records})
-        record_value = "This is test event {} of type {}".format(produced_records, record_key)
+        record_value = "This is test.py event {} of type {}".format(produced_records, record_key)
         produce_message({"key": record_key, "value": record_value})
         sleep(1)
 

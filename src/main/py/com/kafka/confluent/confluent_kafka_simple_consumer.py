@@ -117,7 +117,7 @@ def asynchronous_commits_consume_loop(consumer, topics):
 #
 #
 #
-TOPIC = "test-topic"
+TOPIC = "test.py-topic"
 
 #
 #     'enable.auto.commit': False,

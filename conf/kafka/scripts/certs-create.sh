@@ -110,7 +110,7 @@ EOF
 
 done
 
-# used for other/rest-proxy-security-plugin test
+# used for other/rest-proxy-security-plugin test.py
 # https://stackoverflow.com/a/8224863
 openssl pkcs12 -export -in conf/kafka/secrets/clientrestproxy-signed.crt -inkey conf/kafka/secrets/clientrestproxy.key \
                -out conf/kafka/secrets/clientrestproxy.p12 -name clientrestproxy \

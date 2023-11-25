@@ -17,7 +17,7 @@
 #
 
 #
-# confluent_kafka_DeserializingConsumer.py -b kafka-broker:9092 -s http://schema-registry:8081 -t test-avro-topic -g test-avro-cg
+# confluent_kafka_DeserializingConsumer.py -b kafka-broker:9092 -s http://schema-registry:8081 -t test.py-avro-topic -g test.py-avro-cg
 #
 
 #

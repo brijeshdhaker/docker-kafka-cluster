@@ -81,16 +81,16 @@ class ConfigTest(unittest.TestCase):
         machine_name = os.environ["DOCKER_MACHINE_NAME"]
         cls.machine = utils.TestMachine(machine_name)
 
-        # Create directories with the correct permissions for test with userid and external volumes.
-        cls.machine.ssh("mkdir -p /tmp/kafka-config-kitchen-sink-test/data")
-        cls.machine.ssh("sudo chown -R 12345 /tmp/kafka-config-kitchen-sink-test/data")
+        # Create directories with the correct permissions for test.py with userid and external volumes.
+        cls.machine.ssh("mkdir -p /tmp/kafka-config-kitchen-sink-test.py/data")
+        cls.machine.ssh("sudo chown -R 12345 /tmp/kafka-config-kitchen-sink-test.py/data")
 
         # Copy SSL files.
-        cls.machine.ssh("mkdir -p /tmp/kafka-config-test/secrets")
+        cls.machine.ssh("mkdir -p /tmp/kafka-config-test.py/secrets")
         local_secrets_dir = os.path.join(FIXTURES_DIR, "secrets")
-        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-config-test")
+        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-config-test.py")
 
-        cls.cluster = utils.TestCluster("config-test", FIXTURES_DIR, "standalone-config.yml")
+        cls.cluster = utils.TestCluster("config-test.py", FIXTURES_DIR, "standalone-config.yml")
         cls.cluster.start()
 
         # Create keytabs
@@ -101,8 +101,8 @@ class ConfigTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.cluster.shutdown()
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-config-kitchen-sink-test")
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-config-test/secrets")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-config-kitchen-sink-test.py")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-config-test.py/secrets")
 
     @classmethod
     def is_kafka_healthy_for_service(cls, service, port, num_brokers, host="localhost", security_protocol="PLAINTEXT"):
@@ -298,7 +298,7 @@ class StandaloneNetworkingTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.cluster = utils.TestCluster("standalone-network-test", FIXTURES_DIR, "standalone-network.yml")
+        cls.cluster = utils.TestCluster("standalone-network-test.py", FIXTURES_DIR, "standalone-network.yml")
         cls.cluster.start()
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-bridge", ZK_READY.format(servers="localhost:2181"))
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-host", ZK_READY.format(servers="localhost:32181"))
@@ -362,7 +362,7 @@ class StandaloneNetworkingTest(unittest.TestCase):
 class ClusterBridgedNetworkTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-bridged-plain.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-bridged-plain.yml")
         cls.cluster.start()
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-1", ZK_READY.format(servers="zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"))
 
@@ -410,18 +410,18 @@ class ClusterSSLBridgedNetworkTest(ClusterBridgedNetworkTest):
         cls.machine = utils.TestMachine(machine_name)
 
         # Copy SSL files.
-        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-bridge-test/secrets")
+        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-bridge-test.py/secrets")
         local_secrets_dir = os.path.join(FIXTURES_DIR, "secrets")
-        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-bridge-test")
+        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-bridge-test.py")
 
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-bridged-ssl.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-bridged-ssl.yml")
         cls.cluster.start()
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-1", ZK_READY.format(servers="zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181"))
 
     @classmethod
     def tearDownClass(cls):
         cls.cluster.shutdown()
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-bridge-test/secrets")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-bridge-test.py/secrets")
 
     def test_bridge_network(self):
         # Test from within the container
@@ -430,7 +430,7 @@ class ClusterSSLBridgedNetworkTest(ClusterBridgedNetworkTest):
         logs = utils.run_docker_command(
             image="confluentinc/cp-kafkacat",
             command=KAFKA_SSL_CHECK.format(host="kafka-ssl-1", port=9093),
-            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets']})
 
         parsed_logs = json.loads(logs)
         self.assertEquals(3, len(parsed_logs["brokers"]))
@@ -443,7 +443,7 @@ class ClusterSSLBridgedNetworkTest(ClusterBridgedNetworkTest):
             name="kafka-ssl-bridged-producer",
             environment={'KAFKA_ZOOKEEPER_CONNECT': "zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181/ssl"},
             command=PRODUCER.format(brokers="kafka-ssl-1:9093", topic="foo", config="bridged.producer.ssl.config", messages=100),
-            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("PRODUCED 100 messages" in producer_logs)
 
@@ -452,7 +452,7 @@ class ClusterSSLBridgedNetworkTest(ClusterBridgedNetworkTest):
             image="confluentinc/cp-kafkacat",
             name="kafkacat-ssl-bridged-consumer",
             command=KAFKACAT_SSL_CONSUMER.format(brokers="kafka-ssl-1:9093", topic="foo", messages=10),
-            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertEquals("\n".join([str(i + 1) for i in xrange(10)]), consumer_logs.strip())
 
@@ -464,11 +464,11 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
         cls.machine = utils.TestMachine(machine_name)
 
         # Copy SSL files.
-        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-bridge-test/secrets")
+        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-bridge-test.py/secrets")
         local_secrets_dir = os.path.join(FIXTURES_DIR, "secrets")
-        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-bridge-test")
+        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-bridge-test.py")
 
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-bridged-sasl.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-bridged-sasl.yml")
         cls.cluster.start()
 
         # Create keytabs
@@ -484,7 +484,7 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
     @classmethod
     def tearDownClass(cls):
         cls.cluster.shutdown()
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-bridge-test/secrets")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-bridge-test.py/secrets")
 
     def test_bridge_network(self):
         # Test from within the container
@@ -496,7 +496,7 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
         #     image="confluentinc/cp-kafkacat",
         #     name="bridged-kafkacat",
         #     command=KAFKA_SASL_SSL_CHECK.format(host="kafka-sasl-ssl-1", port=9094, broker_principal="kafka", client_principal="bridged_kafkacat", client_host="bridged-kafkacat"),
-        #     host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets', '/tmp/kafka-cluster-bridge-test/secrets/bridged_krb.conf:/etc/krb5.conf']})
+        #     host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets', '/tmp/kafka-cluster-bridge-test.py/secrets/bridged_krb.conf:/etc/krb5.conf']})
         #
         # parsed_logs = json.loads(logs)
         # self.assertEquals(3, len(parsed_logs["brokers"]))
@@ -511,7 +511,7 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
             name="kafka-sasl-ssl-bridged-producer",
             environment=producer_env,
             command=PRODUCER.format(brokers="kafka-sasl-ssl-1:9094", topic="foo", config="bridged.producer.ssl.sasl.config", messages=100),
-            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("PRODUCED 100 messages" in producer_logs)
 
@@ -524,7 +524,7 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
             name="kafka-sasl-ssl-bridged-consumer",
             environment=consumer_env,
             command=CONSUMER.format(brokers="kafka-sasl-ssl-1:9094", topic="foo", config="bridged.consumer.ssl.sasl.config", messages=10),
-            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'cluster-test_zk', 'Binds': ['/tmp/kafka-cluster-bridge-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("Processed a total of 10 messages" in consumer_logs)
 
@@ -532,7 +532,7 @@ class ClusterSASLBridgedNetworkTest(ClusterBridgedNetworkTest):
 class ClusterHostNetworkTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-host-plain.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-host-plain.yml")
         cls.cluster.start()
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-1", ZK_READY.format(servers="localhost:22181,localhost:32181,localhost:42181"))
 
@@ -580,11 +580,11 @@ class ClusterSSLHostNetworkTest(ClusterHostNetworkTest):
         cls.machine = utils.TestMachine(machine_name)
 
         # Copy SSL files.
-        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-host-test/secrets")
+        print cls.machine.ssh("mkdir -p /tmp/kafka-cluster-host-test.py/secrets")
         local_secrets_dir = os.path.join(FIXTURES_DIR, "secrets")
-        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-host-test")
+        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-host-test.py")
 
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-host-ssl.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-host-ssl.yml")
         cls.cluster.start()
 
         assert "PASS" in cls.cluster.run_command_on_service("zookeeper-1", ZK_READY.format(servers="localhost:22181,localhost:32181,localhost:42181"))
@@ -592,7 +592,7 @@ class ClusterSSLHostNetworkTest(ClusterHostNetworkTest):
     @classmethod
     def tearDownClass(cls):
         cls.cluster.shutdown()
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-host-test/secrets")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-host-test.py/secrets")
 
     def test_host_network(self):
         # Test from within the container
@@ -601,7 +601,7 @@ class ClusterSSLHostNetworkTest(ClusterHostNetworkTest):
         logs = utils.run_docker_command(
             image="confluentinc/cp-kafkacat",
             command=KAFKA_SSL_CHECK.format(host="localhost", port=19093),
-            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test.py/secrets:/etc/kafka/secrets']})
 
         parsed_logs = json.loads(logs)
         self.assertEquals(3, len(parsed_logs["brokers"]))
@@ -614,7 +614,7 @@ class ClusterSSLHostNetworkTest(ClusterHostNetworkTest):
             name="kafka-ssl-host-producer",
             environment={'KAFKA_ZOOKEEPER_CONNECT': "localhost:22181,localhost:32181,localhost:42181/ssl"},
             command=PRODUCER.format(brokers="localhost:29093", topic="foo", config="host.producer.ssl.config", messages=100),
-            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("PRODUCED 100 messages" in producer_logs)
 
@@ -623,7 +623,7 @@ class ClusterSSLHostNetworkTest(ClusterHostNetworkTest):
             image="confluentinc/cp-kafkacat",
             name="kafkacat-ssl-host-consumer",
             command=KAFKACAT_SSL_CONSUMER.format(brokers="localhost:29093", topic="foo", messages=10),
-            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertEquals("\n".join([str(i + 1) for i in xrange(10)]), consumer_logs.strip())
 
@@ -643,12 +643,12 @@ class ClusterSASLHostNetworkTest(ClusterHostNetworkTest):
         cls.machine.ssh(cmd.format(IP=cls.machine.get_internal_ip().strip()))
 
         # Copy SSL files.
-        cls.machine.ssh("mkdir -p /tmp/kafka-cluster-host-test/secrets")
+        cls.machine.ssh("mkdir -p /tmp/kafka-cluster-host-test.py/secrets")
 
         local_secrets_dir = os.path.join(FIXTURES_DIR, "secrets")
-        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-host-test")
+        cls.machine.scp_to_machine(local_secrets_dir, "/tmp/kafka-cluster-host-test.py")
 
-        cls.cluster = utils.TestCluster("cluster-test", FIXTURES_DIR, "cluster-host-sasl.yml")
+        cls.cluster = utils.TestCluster("cluster-test.py", FIXTURES_DIR, "cluster-host-sasl.yml")
         cls.cluster.start()
 
         # Create keytabs
@@ -669,7 +669,7 @@ class ClusterSASLHostNetworkTest(ClusterHostNetworkTest):
     @classmethod
     def tearDownClass(cls):
         cls.cluster.shutdown()
-        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-host-test/secrets")
+        cls.machine.ssh("sudo rm -rf /tmp/kafka-cluster-host-test.py/secrets")
 
     def test_host_network(self):
         # Test from within the container
@@ -683,7 +683,7 @@ class ClusterSASLHostNetworkTest(ClusterHostNetworkTest):
             name="kafka-ssl-sasl-host-producer",
             environment=producer_env,
             command=PRODUCER.format(brokers="sasl.kafka.com:29094", topic="foo", config="host.producer.ssl.sasl.config", messages=100),
-            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("PRODUCED 100 messages" in producer_logs)
 
@@ -696,6 +696,6 @@ class ClusterSASLHostNetworkTest(ClusterHostNetworkTest):
             name="kafka-ssl-sasl-host-consumer",
             environment=consumer_env,
             command=CONSUMER.format(brokers="sasl.kafka.com:29094", topic="foo", config="host.consumer.ssl.sasl.config", messages=10),
-            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test/secrets:/etc/kafka/secrets']})
+            host_config={'NetworkMode': 'host', 'Binds': ['/tmp/kafka-cluster-host-test.py/secrets:/etc/kafka/secrets']})
 
         self.assertTrue("Processed a total of 10 messages" in consumer_logs)
